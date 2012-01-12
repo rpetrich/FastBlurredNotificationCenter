@@ -1,0 +1,10 @@
+Package: com.rpetrich.fastblurrednotificationcenter
+Name: FastBlurredNotificationCenter
+Version: 0.1
+Architecture: iphoneos-arm
+Description: More efficient version of BlurriedNCBackground
+Maintainer: Ryan Petrich <rpetrich+fastblurrednotificationcenter@gmail.com>
+Author: Ryan Petrich <rpetrich+fastblurrednotificationcenter@gmail.com>
+Depends: mobilesubstrate, firmware (>= 5.0)
+Section: Tweaks
+dev: rpetrich
