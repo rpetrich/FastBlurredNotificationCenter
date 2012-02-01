@@ -16,6 +16,14 @@
 - (void)positionSlidingViewAtY:(CGFloat)y;
 @end
 
+static BOOL isOnLockScreen()
+{
+	SBAwayController *awayController = [objc_getClass("SBAwayController") sharedAwayController];
+	if (!awayController)
+		return NO;
+	else [awayController isLocked];
+}
+
 %hook SBBulletinListView
 
 static UIView *activeView;
@@ -27,6 +35,9 @@ static UIView *activeView;
 
 - (id)initWithFrame:(CGRect)frame delegate:(id)delegate
 {
+	if (isOnLockScreen())
+		return %orig;
+
 	if ((self = %orig)) {
 		IOSurfaceRef surface = [UIWindow createScreenIOSurface];
 		UIImageOrientation imageOrientation;
