@@ -27,6 +27,8 @@ static UIView *activeView;
 
 - (id)initWithFrame:(CGRect)frame delegate:(id)delegate
 {
+	if ([[%c(SBAwayController) sharedAwayController] isLocked])
+		return %orig;
 	if ((self = %orig)) {
 		IOSurfaceRef surface = [UIWindow createScreenIOSurface];
 		UIImageOrientation imageOrientation;
