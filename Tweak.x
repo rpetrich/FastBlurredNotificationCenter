@@ -30,37 +30,39 @@ static UIView *activeView;
 	if ([[%c(SBAwayController) sharedAwayController] isLocked])
 		return %orig;
 	if ((self = %orig)) {
-		IOSurfaceRef surface = [UIWindow createScreenIOSurface];
-		UIImageOrientation imageOrientation;
-		switch ([(SpringBoard *)UIApp activeInterfaceOrientation]) {
-			case UIInterfaceOrientationPortrait:
-			default:
-				imageOrientation = UIImageOrientationUp;
-				break;
-			case UIInterfaceOrientationPortraitUpsideDown:
-				imageOrientation = UIImageOrientationDown;
-				break;
-			case UIInterfaceOrientationLandscapeLeft:
-				imageOrientation = UIImageOrientationRight;
-				break;
-			case UIInterfaceOrientationLandscapeRight:
-				imageOrientation = UIImageOrientationLeft;
-				break;
-		}
-		UIImage *image = [[UIImage alloc] _initWithIOSurface:surface scale:[UIScreen mainScreen].scale orientation:imageOrientation];
-		CFRelease(surface);
-		if (!activeView)
+		if (!activeView) {
+			IOSurfaceRef surface = [UIWindow createScreenIOSurface];
+			UIImageOrientation imageOrientation;
+			switch ([(SpringBoard *)UIApp activeInterfaceOrientation]) {
+				case UIInterfaceOrientationPortrait:
+				default:
+					imageOrientation = UIImageOrientationUp;
+					break;
+				case UIInterfaceOrientationPortraitUpsideDown:
+					imageOrientation = UIImageOrientationDown;
+					break;
+				case UIInterfaceOrientationLandscapeLeft:
+					imageOrientation = UIImageOrientationRight;
+					break;
+				case UIInterfaceOrientationLandscapeRight:
+					imageOrientation = UIImageOrientationLeft;
+					break;
+			}
+			UIImage *image = [[UIImage alloc] _initWithIOSurface:surface scale:[UIScreen mainScreen].scale orientation:imageOrientation];
+			CFRelease(surface);
 			activeView = [[UIImageView alloc] initWithImage:image];
-		static NSArray *filters;
-		if (!filters) {
-			CAFilter *filter = [CAFilter filterWithType:@"gaussianBlur"];
-			[filter setValue:[NSNumber numberWithFloat:5.0f] forKey:@"inputRadius"];
-			filters = [[NSArray alloc] initWithObjects:filter, nil];
+			[image release];
+			static NSArray *filters;
+			if (!filters) {
+				CAFilter *filter = [CAFilter filterWithType:@"gaussianBlur"];
+				[filter setValue:[NSNumber numberWithFloat:5.0f] forKey:@"inputRadius"];
+				filters = [[NSArray alloc] initWithObjects:filter, nil];
+			}
+			CALayer *layer = activeView.layer;
+			layer.filters = filters;
+			layer.shouldRasterize = YES;
+			activeView.alpha = 0.0f;
 		}
-		CALayer *layer = activeView.layer;
-		layer.filters = filters;
-		layer.shouldRasterize = YES;
-		activeView.alpha = 0.0f;
 		[self insertSubview:activeView atIndex:0];
 		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
 	}
