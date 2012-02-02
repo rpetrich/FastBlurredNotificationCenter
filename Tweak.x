@@ -71,7 +71,7 @@ static BOOL blurredOrientationIsPortrait;
 			activeView.userInteractionEnabled = YES;
 		}
 		[self insertSubview:activeView atIndex:0];
-		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.33f];
+		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? 0.0f : 0.50f];
 	}
 	return self;
 }
