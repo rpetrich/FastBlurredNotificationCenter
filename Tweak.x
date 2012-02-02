@@ -68,6 +68,7 @@ static BOOL blurredOrientationIsPortrait;
 			layer.filters = filters;
 			layer.shouldRasterize = YES;
 			activeView.alpha = 0.0f;
+			activeView.userInteractionEnabled = YES;
 		}
 		[self insertSubview:activeView atIndex:0];
 		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.33f];
