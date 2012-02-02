@@ -91,7 +91,7 @@ static BOOL blurredOrientationIsPortrait;
 
 - (void)positionSlidingViewAtY:(CGFloat)y
 {
-	CGFloat height = self.bounds.size.height;
+	CGFloat height = [self linenView].frame.size.height;
 	UIInterfaceOrientation orientation = CHIvar(self, _orientation, UIInterfaceOrientation);
 	activeView.alpha = (blurredOrientationIsPortrait == UIInterfaceOrientationIsPortrait(orientation)) ? (height ? (y / height) : 1.0f) : 0.0f;
 	%orig;
