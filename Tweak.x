@@ -2,6 +2,7 @@
 #import <QuartzCore/QuartzCore2.h>
 #import <SpringBoard/SpringBoard.h>
 #import <IOSurface/IOSurface.h>
+#import <CaptainHook/CaptainHook.h>
 
 @interface UIImage (IOSurface)
 - (id)_initWithIOSurface:(IOSurfaceRef)surface scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
@@ -19,6 +20,7 @@
 %hook SBBulletinListView
 
 static UIView *activeView;
+static BOOL blurredOrientationIsPortrait;
 
 + (UIImage *)linen
 {
@@ -37,15 +39,19 @@ static UIView *activeView;
 				case UIInterfaceOrientationPortrait:
 				default:
 					imageOrientation = UIImageOrientationUp;
+					blurredOrientationIsPortrait = YES;
 					break;
 				case UIInterfaceOrientationPortraitUpsideDown:
 					imageOrientation = UIImageOrientationDown;
+					blurredOrientationIsPortrait = YES;
 					break;
 				case UIInterfaceOrientationLandscapeLeft:
 					imageOrientation = UIImageOrientationRight;
+					blurredOrientationIsPortrait = NO;
 					break;
 				case UIInterfaceOrientationLandscapeRight:
 					imageOrientation = UIImageOrientationLeft;
+					blurredOrientationIsPortrait = NO;
 					break;
 			}
 			UIImage *image = [[UIImage alloc] _initWithIOSurface:surface scale:[UIScreen mainScreen].scale orientation:imageOrientation];
@@ -77,10 +83,17 @@ static UIView *activeView;
 	%orig;
 }
 
+- (void)layoutForOrientation:(UIInterfaceOrientation)orientation
+{
+	activeView.alpha = blurredOrientationIsPortrait == UIInterfaceOrientationIsPortrait(orientation);
+	%orig;
+}
+
 - (void)positionSlidingViewAtY:(CGFloat)y
 {
 	CGFloat height = self.bounds.size.height;
-	activeView.alpha = height ? (y / height) : 1.0f;
+	UIInterfaceOrientation orientation = CHIvar(self, _orientation, UIInterfaceOrientation);
+	activeView.alpha = (blurredOrientationIsPortrait == UIInterfaceOrientationIsPortrait(orientation)) ? (height ? (y / height) : 1.0f) : 0.0f;
 	%orig;
 }
 
