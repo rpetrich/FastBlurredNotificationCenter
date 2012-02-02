@@ -70,7 +70,7 @@ static BOOL blurredOrientationIsPortrait;
 			activeView.alpha = 0.0f;
 		}
 		[self insertSubview:activeView atIndex:0];
-		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.5f];
+		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:0.33f];
 	}
 	return self;
 }
