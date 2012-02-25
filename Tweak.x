@@ -45,7 +45,7 @@ static UIView *activeView;
 				imageOrientation = UIImageOrientationLeft;
 				break;
 		}
-		UIImage *image = [[UIImage alloc] _initWithIOSurface:surface scale:[UIScreen mainScreen].scale orientation:imageOrientation];
+		UIImage *image = [[[UIImage alloc] _initWithIOSurface:surface scale:[UIScreen mainScreen].scale orientation:imageOrientation] autorelease];
 		CFRelease(surface);
 		if (!activeView)
 			activeView = [[UIImageView alloc] initWithImage:image];
