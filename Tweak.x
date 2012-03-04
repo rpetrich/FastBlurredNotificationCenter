@@ -94,7 +94,9 @@ static BOOL blurredOrientationIsPortrait;
 {
 	CGFloat height = [self linenView].frame.size.height;
 	UIInterfaceOrientation orientation = CHIvar(self, _orientation, UIInterfaceOrientation);
-	activeView.alpha = (blurredOrientationIsPortrait == UIInterfaceOrientationIsPortrait(orientation)) ? (height ? (y / height) : 1.0f) : 0.0f;
+	CGFloat uncurvedAlpha = (blurredOrientationIsPortrait == UIInterfaceOrientationIsPortrait(orientation)) ? (height ? (y / height) : 1.0f) : 0.0f;
+	CGFloat value = 1.0f - uncurvedAlpha;
+	activeView.alpha = 1.0f - (value * value);
 	%orig;
 }
 
