@@ -4,6 +4,25 @@
 #import <IOSurface/IOSurface.h>
 #import <CaptainHook/CaptainHook.h>
 
+#define idForKeyWithDefault(dict, key, default)	 ([(dict) objectForKey:(key)]?:(default))
+#define floatForKeyWithDefault(dict, key, default)   ({ id _result = [(dict) objectForKey:(key)]; (_result)?[_result floatValue]:(default); })
+#define NSIntegerForKeyWithDefault(dict, key, default) (NSInteger)({ id _result = [(dict) objectForKey:(key)]; (_result)?[_result integerValue]:(default); })
+#define BOOLForKeyWithDefault(dict, key, default)    (BOOL)({ id _result = [(dict) objectForKey:(key)]; (_result)?[_result boolValue]:(default); })
+
+#define PreferencesFilePath [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Preferences/com.mpow.BlurredNCplus.plist"]
+#define PreferencesChangedNotification "com.mpow.BlurredNCplus.prefs"
+
+
+#define GetPreference(name, type) type ## ForKeyWithDefault(prefsDict, @#name, (name))
+
+static NSDictionary *prefsDict = nil;
+
+static void preferenceChangedCallback(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
+	[prefsDict release];
+	prefsDict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
+}
+
+
 @interface UIImage (IOSurface)
 - (id)_initWithIOSurface:(IOSurfaceRef)surface scale:(CGFloat)scale orientation:(UIImageOrientation)orientation;
 @end
@@ -17,6 +36,14 @@
 - (void)positionSlidingViewAtY:(CGFloat)y;
 @end
 
+
+BOOL blurred;
+float red;
+float blue;
+float green;
+float alpha;
+float blur;
+
 %hook SBBulletinListView
 
 static UIView *activeView;
@@ -24,11 +51,21 @@ static BOOL blurredOrientationIsPortrait;
 
 + (UIImage *)linen
 {
+blurred= [[prefsDict objectForKey:@"useorigbg"]boolValue];
+if (blurred==1){
+return %orig;
+}
 	return nil;
 }
 
 - (id)initWithFrame:(CGRect)frame delegate:(id)delegate
 {
+red= [[prefsDict objectForKey:@"red"]floatValue]?:1.0f;
+blue= [[prefsDict objectForKey:@"blue"]floatValue]?:1.0f;
+green= [[prefsDict objectForKey:@"green"]floatValue]?:1.0f;
+alpha= [[prefsDict objectForKey:@"alpha"]floatValue]?:1.0f;
+blur= [[prefsDict objectForKey:@"blur"]floatValue]?:1.0f;
+
 	if ([[%c(SBAwayController) sharedAwayController] isLocked])
 		return %orig;
 	if ((self = %orig)) {
@@ -58,12 +95,11 @@ static BOOL blurredOrientationIsPortrait;
 			CFRelease(surface);
 			activeView = [[UIImageView alloc] initWithImage:image];
 			[image release];
-			static NSArray *filters;
-			if (!filters) {
+static NSArray *filters;
 				CAFilter *filter = [CAFilter filterWithType:@"gaussianBlur"];
-				[filter setValue:[NSNumber numberWithFloat:5.0f] forKey:@"inputRadius"];
+				[filter setValue:[NSNumber numberWithFloat:blur] forKey:@"inputRadius"];
 				filters = [[NSArray alloc] initWithObjects:filter, nil];
-			}
+
 			CALayer *layer = activeView.layer;
 			layer.filters = filters;
 			layer.shouldRasterize = YES;
@@ -71,7 +107,7 @@ static BOOL blurredOrientationIsPortrait;
 			activeView.userInteractionEnabled = YES;
 		}
 		[self insertSubview:activeView atIndex:0];
-		[self linenView].backgroundColor = [UIColor colorWithWhite:0.0f alpha:(UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) ? 0.0f : 0.50f];
+		[self linenView].backgroundColor = [UIColor colorWithRed:red green:green blue:blue alpha:alpha];
 	}
 	return self;
 }
@@ -99,3 +135,17 @@ static BOOL blurredOrientationIsPortrait;
 }
 
 %end
+
+
+__attribute__((constructor)) static void fis_init() {
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+	// SpringBoard only!
+	if (![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.springboard"])
+		return;
+
+	prefsDict = [[NSDictionary alloc] initWithContentsOfFile:PreferencesFilePath];
+	CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, preferenceChangedCallback, CFSTR(PreferencesChangedNotification), NULL, CFNotificationSuspensionBehaviorCoalesce);
+
+	[pool release];
+}
